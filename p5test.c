@@ -231,9 +231,9 @@ void p5test() {
 
   i32 fd = fsOpen("P5");    // open "P5" for testing
 //  debDumpDir();
-//  debDumpInodes();
+  debDumpInodes();
 //  debDumpSuper();
-//  debDumpDbn(3, 2);
+  //debDumpDbn(10, 2);
   test1(fd);
   test2(fd);
   test3(fd);

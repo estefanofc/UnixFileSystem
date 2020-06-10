@@ -5,6 +5,7 @@
 #include "bfs.h"
 #include "fs.h"
 #include <stdlib.h>
+#include "deb.h"
 
 // ============================================================================
 // Close the file currently open on file descriptor 'fd'.
@@ -89,41 +90,29 @@ i32 fsOpen(str fname) {
 // read (may be less than 'numb' if we hit EOF).  On failure, abort
 // ============================================================================
 i32 fsRead(i32 fd, i32 numb, void *buf) {
-  //get inumber
   i32 inum = bfsFdToInum(fd);
-  //get current cursor position
   i32 cursor = fsTell(fd);
-  //printf("before loop\n");
-  //printf("%d\n", fsTell(fd));
   i32 size = fsSize(fd);
   if (cursor == size)
     return 0;
-  // (assume small read from same FBN - file block number)
   // find the DBN - disk block number
-  i8 startfbn = cursor % BYTESPERBLOCK;
+  i8 startfbn = cursor / BYTESPERBLOCK;
   i32 startdbn = bfsFbnToDbn(inum, startfbn);
-  // read the data into a tempBuffer using bioread
   i32 offset = 0;
   i32 reset = cursor % BYTESPERBLOCK;
   i8 numberofblocks = (reset + numb) / BYTESPERBLOCK + 1;
   i8 *tempbuffer = malloc(BYTESPERBLOCK * numberofblocks);
-  //printf("during loop\n");
   for (int i = 0; i < numberofblocks; ++i) {
-    //bioread - read fbn1, fbn2, fbn3, ...
-    //printf("%d\n", fsTell(fd));
+    // read the data into a tempBuffer using bioread
     bioRead(startdbn, &tempbuffer[offset]);
     offset += BYTESPERBLOCK;
-    startfbn += BYTESPERBLOCK;
+    startfbn++;
     startdbn = bfsFbnToDbn(inum, startfbn);
   }
-  //printf("after loop\n");
-  // use memcpy to copy it from tempBufer to buf
   memcpy(buf, &tempbuffer[reset], numb);
-  // free tempBuffer
   free(tempbuffer);
   // increase cursor position
   fsSeek(fd, numb, SEEK_CUR);
-  //printf("%d\n", fsTell(fd));
   return numb;
 }
 
@@ -182,12 +171,38 @@ i32 fsSize(i32 fd) {
 // destination file.  On success, return 0.  On failure, abort
 // ============================================================================
 i32 fsWrite(i32 fd, i32 numb, void *buf) {
-
-  // ++++++++++++++++++++++++
-  // Insert your code here
-  // ++++++++++++++++++++++++
-
-  FATAL(ENYI);                                  // Not Yet Implemented!
-  //Also remember to use bfsSetSize to set the file size at the end of fsWrite
+  i32 inum = bfsFdToInum(fd);
+  i32 cursor = fsTell(fd);
+  i32 size = fsSize(fd);
+  i8 startfbn = cursor / BYTESPERBLOCK;
+  i32 startdbn = bfsFbnToDbn(inum, startfbn);
+  i8 endfbn = (cursor + numb) / BYTESPERBLOCK;
+  i32 enddbn = bfsFbnToDbn(inum, endfbn);
+  i32 offset = 0;
+  i32 reset = cursor % BYTESPERBLOCK;
+  i8 numberofblocks = (reset + numb) / BYTESPERBLOCK + 1;
+  //special case
+  if (cursor + numb >= size) {
+    printf("HIII");
+    return 0;
+  }
+  i8 *tempbuffer = malloc(BYTESPERBLOCK * numberofblocks);
+  bioRead(startdbn, &tempbuffer[offset]);
+  if (startfbn != endfbn) {
+    offset = BYTESPERBLOCK * (numberofblocks - 1);
+    bioRead(enddbn, &tempbuffer[offset]);
+    offset = 0;
+  }
+  memcpy(&tempbuffer[reset], buf, numb);
+  for (int i = 0; i < numberofblocks; ++i) {
+    bioWrite(startdbn, &tempbuffer[offset]);
+    offset += BYTESPERBLOCK;
+    startfbn++;
+    startdbn = bfsFbnToDbn(inum, startfbn);
+  }
+  free(tempbuffer);
+  // increase cursor position
+  fsSeek(fd, numb, SEEK_CUR);
+  bfsSetSize(inum, size);
   return 0;
 }
