@@ -10,7 +10,6 @@ add_executable(P5
         bfs.c
         BFS.docx
         bfs.h
-        BFSDISK
         bio.c
         bio.h
         deb.c

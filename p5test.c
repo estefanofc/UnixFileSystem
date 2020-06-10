@@ -4,6 +4,7 @@
 // ============================================================================
 
 #include "p5test.h"
+#include "deb.h"
 
 // ============================================================================
 // Check that 'size' bytes, starting at buf[start] hold the value 'val'.
@@ -189,6 +190,12 @@ void test5(i32 fd) {
 //          512*99, 188*99, 324*0
 // ============================================================================
 void test6(i32 fd) {
+  printf("*** Starting Test6\n");
+  printf("File size is %d\n", fsSize(fd));
+  printf("Number of blocks allocated: %f\n",
+         (float) fsSize(fd) / BYTESPERBLOCK);
+  printf("Starting to write at %d\n", 49 * BYTESPERBLOCK);
+
   i8 buf[BUFSIZE];                  // buffer for reads and writes
 
   fsSeek(fd, 49 * BYTESPERBLOCK, SEEK_SET);
@@ -223,7 +230,10 @@ void test6(i32 fd) {
 void p5test() {
 
   i32 fd = fsOpen("P5");    // open "P5" for testing
-
+//  debDumpDir();
+//  debDumpInodes();
+//  debDumpSuper();
+//  debDumpDbn(3, 2);
   test1(fd);
   test2(fd);
   test3(fd);
