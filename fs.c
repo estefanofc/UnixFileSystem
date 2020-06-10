@@ -182,8 +182,21 @@ i32 fsWrite(i32 fd, i32 numb, void *buf) {
   i32 reset = cursor % BYTESPERBLOCK;
   i8 numberofblocks = (reset + numb) / BYTESPERBLOCK + 1;
   //special case
-  if (cursor + numb >= size) {
-    printf("HIII");
+  if (cursor + numb > size) {
+    i8 *tempbuffer = malloc(BYTESPERBLOCK * numberofblocks);
+    bioRead(startdbn, &tempbuffer[offset]);
+    memcpy(&tempbuffer[reset], buf, numb);
+    bfsAllocBlock(inum, endfbn);
+    for (int i = 0; i < numberofblocks; ++i) {
+      bioWrite(startdbn, &tempbuffer[offset]);
+      offset += BYTESPERBLOCK;
+      startfbn++;
+      startdbn = bfsFbnToDbn(inum, startfbn);
+    }
+    free(tempbuffer);
+    // increase cursor position
+    fsSeek(fd, numb, SEEK_CUR);
+    bfsSetSize(inum, size);
     return 0;
   }
   i8 *tempbuffer = malloc(BYTESPERBLOCK * numberofblocks);
