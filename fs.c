@@ -87,6 +87,15 @@ i32 fsRead(i32 fd, i32 numb, void* buf) {
   // ++++++++++++++++++++++++
   // Insert your code here
   // ++++++++++++++++++++++++
+  //get inumber
+  //get current cursor position
+  // (assume small read from same FBN - file block number)
+  // find the DBN - disk block number
+  // read the data into a tempBuffer using bioread
+  // use memcpy to copy it from tempBufer to buf
+  // free tempBuffer
+  // increase cursor position
+
 
   FATAL(ENYI);                                  // Not Yet Implemented!
   return 0;
